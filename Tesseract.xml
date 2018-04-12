@@ -153,11 +153,6 @@
             Provides information about the hosting process.
             </summary>
         </member>
-        <member name="T:Tesseract.Interop.OSResult">
-             <summary>
-            
-             </summary>
-        </member>
         <member name="T:Tesseract.Interop.ITessApiSignatures">
             <summary>
             The exported tesseract api signatures.
@@ -509,6 +504,35 @@
             Gets the number of <see cref="T:Tesseract.Pix"/> contained in the array.
             </summary>
         </member>
+        <member name="M:Tesseract.PixArray.Add(Tesseract.Pix,Tesseract.PixArrayAccessType)">
+            <summary>
+            Add the specified pix to the end of the pix array.
+            </summary>
+            <remarks>
+            PixArrayAccessType.Insert is not supported as the managed Pix object will attempt to release the pix when
+            it goes out of scope creating an access exception.
+            </remarks>
+            <param name="pix">The pix to add.</param>
+            <param name="copyflag">Determines if a clone or copy of the pix is inserted into the array.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Tesseract.PixArray.Remove(System.Int32)">
+            <summary>
+            Removes the pix located at index.
+            </summary>
+            <remarks>
+            Notes:
+            * This shifts pixa[i] --> pixa[i - 1] for all i > index.
+            * Do not use on large arrays as the functionality is O(n).
+            * The corresponding box is removed as well, if it exists.
+            </remarks>
+            <param name="index">The index of the pix to remove.</param>
+        </member>
+        <member name="M:Tesseract.PixArray.Clear">
+            <summary>
+            Destroys ever pix in the array.
+            </summary>
+        </member>
         <member name="M:Tesseract.PixArray.GetPix(System.Int32,Tesseract.PixArrayAccessType)">
             <summary>
             Gets the <see cref="T:Tesseract.Pix"/> located at <paramref name="index"/> using the specified <paramref name="accessType"/>.
@@ -565,13 +589,14 @@
             as keeping track of what the next renderer is and how to manage the memory.
             </remarks>
         </member>
-        <member name="M:Tesseract.ResultRenderer.CreatePdfRenderer(System.String,System.String)">
+        <member name="M:Tesseract.ResultRenderer.CreatePdfRenderer(System.String,System.String,System.Boolean)">
             <summary>
             Creates a <see cref="T:Tesseract.IResultRenderer">result renderer</see> that render that generates a searchable
             pdf file from tesseract's output.
             </summary>
             <param name="outputFilename">The filename of the pdf file to be generated without the file extension.</param>
             <param name="fontDirectory">The directory containing the pdf font data, normally same as your tessdata directory.</param>
+            <param name="textonly">skip images if set</param>
             <returns></returns>
         </member>
         <member name="M:Tesseract.ResultRenderer.CreateTextRenderer(System.String)">
@@ -1131,7 +1156,32 @@
             deskew angle which isn't available when just performing orientation detection.
             </remarks>
             <param name="orientation">The page orientation.</param>
-            <param name="confidence">The corresponding confidence score that the detected orientation is correct.</param>
+            <param name="confidence">The confidence level of the orientation (15 is reasonably confident).</param>
+            
+        </member>
+        <member name="M:Tesseract.Page.DetectBestOrientation(System.Int32@,System.Single@)">
+            <summary>
+            Detects the page orientation, with corresponding confidence when using <see cref="F:Tesseract.PageSegMode.OsdOnly"/>.
+            </summary>
+            <remarks>
+            If using full page segmentation mode (i.e. AutoOsd) then consider using <see cref="M:Tesseract.Page.AnalyseLayout"/> instead as this also provides a
+            deskew angle which isn't available when just performing orientation detection.
+            </remarks>
+            <param name="orientation">The detected clockwise page rotation in degrees (0, 90, 180, or 270).</param>
+            <param name="confidence">The confidence level of the orientation (15 is reasonably confident).</param>
+        </member>
+        <member name="M:Tesseract.Page.DetectBestOrientationAndScript(System.Int32@,System.Single@,System.String@,System.Single@)">
+            <summary>
+            Detects the page orientation, with corresponding confidence when using <see cref="F:Tesseract.PageSegMode.OsdOnly"/>.
+            </summary>
+            <remarks>
+            If using full page segmentation mode (i.e. AutoOsd) then consider using <see cref="M:Tesseract.Page.AnalyseLayout"/> instead as this also provides a
+            deskew angle which isn't available when just performing orientation detection.
+            </remarks>
+            <param name="orientation">The detected clockwise page rotation in degrees (0, 90, 180, or 270).</param>
+            <param name="confidence">The confidence level of the orientation (15 is reasonably confident).</param>
+            <param name="scriptName">The name of the script (e.g. Latin)</param>
+            <param name="scriptConfidence">The confidence level in the script</param>
         </member>
         <member name="T:Tesseract.PageIterator">
             <summary>
@@ -1292,9 +1342,29 @@
             Treat the image as a single character.
             </summary>
         </member>
+        <member name="F:Tesseract.PageSegMode.SparseText">
+            <summary>
+            Find as much text as possible in no particular order.
+            </summary>
+        </member>
+        <member name="F:Tesseract.PageSegMode.SparseTextOsd">
+            <summary>
+            Sparse text with orientation and script det.
+            </summary>
+        </member>
+        <member name="F:Tesseract.PageSegMode.RawLine">
+            <summary>
+            Treat the image as a single text line, bypassing hacks that are Tesseract-specific.
+            </summary>
+        </member>
         <member name="F:Tesseract.PageSegMode.Count">
             <summary>
             Number of enum entries.
+            </summary>
+        </member>
+        <member name="T:Tesseract.Pix.TSelElementTypes">
+            <summary>
+            Structuring element types.
             </summary>
         </member>
         <member name="F:Tesseract.Pix.VerySmallAngle">
@@ -1421,6 +1491,14 @@
             Conversion from RBG to 8bpp grayscale.
             </summary>
             <returns>The Grayscale pix.</returns>
+        </member>
+        <member name="M:Tesseract.Pix.RemoveLines(System.Int32,System.Int32)">
+            <summary>
+            Removes horizontal lines from a grayscale image. 
+            The algorithm is based on Leptonica <code>lineremoval.c</code> example.
+            See <a href="http://www.leptonica.com/line-removal.html">line-removal</a>.
+            </summary>
+            <returns>image with lines removed</returns>
         </member>
         <member name="M:Tesseract.Pix.RemoveLines">
             <summary>
