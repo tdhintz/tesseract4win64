@@ -1,7 +1,7 @@
 # tesseract4win64
 charlesw/tesseract 4.0 build for x64 Windows.
 
-This is a Win64 build of tesseract 4.0.0 alpha, leptonica 1.74.1, and charlesw/tesseract .Net wrapper.
+This is a Win64 build of tesseract 4.0.0 beta, leptonica 1.75.3, and charlesw/tesseract .Net wrapper.
 
 Tesseract 4.0.0 was built with OpenMP as follows.
 
