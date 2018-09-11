@@ -1,7 +1,7 @@
 # tesseract4win64
-charlesw/tesseract 4.0 build for x64 Windows.
+charlesw/tesseract 4.0 build for x64 and x86 Windows.
 
-This is a Win64 build of tesseract 4.0.0 beta, leptonica 1.75.3, and charlesw/tesseract .Net wrapper.
+This is a build of tesseract 4.0.0 beta, leptonica 1.77.0, and charlesw/tesseract .Net wrapper from September 10th sources.
 
 Tesseract 4.0.0 was built with OpenMP as follows.
 
@@ -33,3 +33,13 @@ cppan --generate .
 
 Open the tesseract.sln created in this same folder using Visual Studio 2017, select the Release configuration.
 Set OpenMP property and then build.
+
+Custom Leptonic settings include:
+1. NO_CONSOLE_IO added to Preprocessor definitions.
+2. Enable intrinsic functions: Yes.
+3. Floating point model: Fast.
+4. Enable COMDAT folding: Yes.
+5. Use link time code generation: Yes.
+
+Custom Tesseract 4.0 settings include:
+1. Floating point model: Fast.
